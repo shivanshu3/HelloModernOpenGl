@@ -28,14 +28,27 @@ static void GLAPIENTRY OpenGlDebugCallback
     const void* userParam
 )
 {
-    std::cout << L"OpenGL Error:\n";
+    bool crashProgram = false;
+
+    if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+    {
+        std::cout << "OpenGL Notification:\n";
+    }
+    else
+    {
+        std::cout << "OpenGL Warning/Error:\n";
+        crashProgram = true;
+    }
+
     std::cout << message << std::endl;
 
-    Crash();
+    if (crashProgram)
+        Crash();
 }
 
 void EnableOpenGlDebugCallback()
 {
+    glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(OpenGlDebugCallback, nullptr);
 }
 

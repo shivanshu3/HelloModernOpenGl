@@ -5,12 +5,12 @@
 #include "util.h"
 #include "ShaderLoader.h"
 
-GLuint VertexArrayID;
-GLuint vertexbuffer;
+GLint colorUniformLocation = -1;
 double lastTime;
 
 void Init()
 {
+    GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
@@ -21,6 +21,7 @@ void Init()
         0.5, -0.5, 0,     0, 1, 0,
     };
 
+    GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
@@ -60,6 +61,9 @@ void Init()
     if (programID == 0)
         Crash();
     glUseProgram(programID);
+
+    colorUniformLocation = glGetUniformLocation(programID, "uColor");
+    glUniform3f(colorUniformLocation, 1, 0, 0);
 
     lastTime = glfwGetTime();
 }
