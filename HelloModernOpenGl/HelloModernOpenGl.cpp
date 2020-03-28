@@ -5,7 +5,11 @@
 #include "util.h"
 #include "ShaderLoader.h"
 
-GLint colorUniformLocation = -1;
+GLint uBlue = -1;
+float blueValue = 0;
+bool blueValueInc = true;
+GLuint elementbuffer1;
+GLuint elementbuffer2;
 double lastTime;
 
 void Init()
@@ -15,10 +19,13 @@ void Init()
     glBindVertexArray(VertexArrayID);
 
     static const GLfloat g_vertex_buffer_data[] = {
-        -0.5, -0.5, 0,   1, 0, 0,
-        -0.5, 0.5, 0,    1, 0.6, 0,
-        0.5, 0.5, 0,     1, 1, 0,
-        0.5, -0.5, 0,     0, 1, 0,
+        -0.5, -0.5, 0,   1, 0, 0, 1,
+        -0.5, 0.5, 0,    1, 0, 0, 1,
+        0.5, -0.5, 0,     1, 0, 0, 1,
+
+        -0.5, -0.5, 0,   0, 1, 0, 0.5,
+        0.5, 0.5, 0,     0, 1, 0, 0.5,
+        0.5, -0.5, 0,     0, 1, 0, 1.0,
     };
 
     GLuint vertexbuffer;
@@ -33,7 +40,7 @@ void Init()
         3,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?
-        sizeof(GLfloat)*6,                  // stride
+        sizeof(GLfloat)*7,                  // stride
         (void*) 0           // array buffer offset
     );
 
@@ -41,42 +48,104 @@ void Init()
     glVertexAttribPointer
     (
         1,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
+        4,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?
-        sizeof(GLfloat) * 6,                  // stride
+        sizeof(GLfloat) * 7,                  // stride
         (void*) (sizeof(GLfloat) * 3)           // array buffer offset
     );
 
-    static const GLuint indices[] = {
-        0, 1, 3, 1, 2, 3,
+    static const GLuint indices1[] = {
+        0, 1, 2, 3, 4, 5
     };
 
-    GLuint elementbuffer;
-    glGenBuffers(1, &elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    static const GLuint indices2[] = {
+        // 1, 2, 3,
+        0, 2, 3,
+    };
+
+    glGenBuffers(1, &elementbuffer1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer1);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices1), indices1, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &elementbuffer2);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer2);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices2), indices2, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     GLuint programID = LoadShaders("hello.vertex", "hello.fragment");
     if (programID == 0)
         Crash();
     glUseProgram(programID);
 
-    colorUniformLocation = glGetUniformLocation(programID, "uColor");
-    glUniform3f(colorUniformLocation, 1, 0, 0);
+    uBlue = glGetUniformLocation(programID, "uBlue");
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     lastTime = glfwGetTime();
 }
 
+void UpdateBlueValue()
+{
+    constexpr float incSize = 0.1;
+
+    if (blueValue >= 1.0)
+    {
+        blueValueInc = false;
+    }
+
+    if (blueValue <= 0.0)
+    {
+        blueValueInc = true;
+    }
+
+    if (blueValueInc)
+    {
+        blueValue += incSize;
+    }
+    else
+    {
+        blueValue -= incSize;
+    }
+
+    if (blueValue > 1.0)
+    {
+        blueValue = 1.0;
+    }
+
+    if (blueValue < 0.0)
+    {
+        blueValue = 0.0;
+    }
+}
+
 void RenderLoop()
 {
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer1);
+
+    UpdateBlueValue();
+    glUniform1f(uBlue, blueValue);
+
     glDrawElements
     (
         GL_TRIANGLES,      // mode
         6,    // count
         GL_UNSIGNED_INT,   // type
-        (void*) 0           // element array buffer offset
+        nullptr           // element array buffer offset
     );
+
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer2);
+    // glUniform3f(colorUniformLocation, 0, 1, 0);
+    // 
+    // glDrawElements
+    // (
+    //     GL_TRIANGLES,      // mode
+    //     3,    // count
+    //     GL_UNSIGNED_INT,   // type
+    //     nullptr           // element array buffer offset
+    // );
 
     auto timeNow = glfwGetTime();
     auto renderTime = timeNow - lastTime;
