@@ -89,7 +89,7 @@ void Init()
 
 void UpdateBlueValue()
 {
-    constexpr float incSize = 0.1;
+    constexpr float incSize = 0.05;
 
     if (blueValue >= 1.0)
     {
@@ -164,7 +164,7 @@ int main()
     if (!glfwInit())
         return -1;
 
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1000, 1000, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
