@@ -6,11 +6,26 @@
 #include "ShaderLoader.h"
 
 GLint uBlue = -1;
+GLint uRotationMatrixId = -1;
+
 float blueValue = 0;
 bool blueValueInc = true;
+
+glm::mat4 rotationMatrix(1.0f);
+float rotationMatrixAngle = 0.0f;
+bool rotationMatrixInc = true;
+
 GLuint elementbuffer1;
 GLuint elementbuffer2;
 double lastTime;
+
+glm::mat4 CreateRotationMatrix(float angle)
+{
+    glm::vec3 rotationAxis(0.0f, 1.0f, 0.0f);
+    auto quat = glm::angleAxis(glm::radians(angle), rotationAxis);
+    auto rotationMatrix = glm::toMat4(quat);
+    return rotationMatrix;
+}
 
 void Init()
 {
@@ -80,6 +95,7 @@ void Init()
     glUseProgram(programID);
 
     uBlue = glGetUniformLocation(programID, "uBlue");
+    uRotationMatrixId = glGetUniformLocation(programID, "uRotationMatrix");
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -121,12 +137,53 @@ void UpdateBlueValue()
     }
 }
 
+void UpdateRotationMatrix()
+{
+    constexpr float incSize = 4.0f;
+    constexpr float maxAngle = 90.0f;
+
+    if (rotationMatrixAngle >= maxAngle)
+    {
+        rotationMatrixInc = false;
+    }
+
+    if (rotationMatrixAngle <= 0.0)
+    {
+        rotationMatrixInc = true;
+    }
+
+    if (rotationMatrixInc)
+    {
+        rotationMatrixAngle += incSize;
+    }
+    else
+    {
+        // rotationMatrixAngle -= incSize;
+        rotationMatrixAngle += incSize;
+    }
+
+    // if (rotationMatrixAngle > maxAngle)
+    // {
+    //     rotationMatrixAngle = maxAngle;
+    // }
+
+    // if (rotationMatrixAngle < 0.0)
+    // {
+    //     rotationMatrixAngle = 0.0;
+    // }
+
+    rotationMatrix = CreateRotationMatrix(rotationMatrixAngle);
+}
+
 void RenderLoop()
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer1);
 
     UpdateBlueValue();
     glUniform1f(uBlue, blueValue);
+
+    UpdateRotationMatrix();
+    glUniformMatrix4fv(uRotationMatrixId, 1, GL_FALSE, &rotationMatrix[0][0]);
 
     glDrawElements
     (

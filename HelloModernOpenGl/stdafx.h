@@ -11,6 +11,7 @@
 #include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/gtc/constants.hpp> // glm::pi
+#include <glm/gtx/quaternion.hpp>
 
 // STL
 #include <iostream>
